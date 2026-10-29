@@ -71,10 +71,14 @@ class TestApiV1Health:
         data = client.get("/api/v1/health").json()
         assert data["environment"] in ("development", "staging", "production")
 
+    def test_database_is_connected(self, client: TestClient) -> None:
+        data = client.get("/api/v1/health").json()
+        assert data["database"] == "connected"
+
     def test_response_shape(self, client: TestClient) -> None:
         """Ensure the response has exactly the documented fields."""
         data = client.get("/api/v1/health").json()
-        assert set(data.keys()) == {"status", "version", "environment"}
+        assert set(data.keys()) == {"status", "version", "environment", "database"}
 
 
 # ------------------------------------------------------------------ #

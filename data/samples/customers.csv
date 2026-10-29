@@ -1,0 +1,11 @@
+external_id,name,email,region
+CUST-1001,Acme Industrial Corp,procurement@acmeind.com,North America
+CUST-1002,Global Retail Partners,ops@globalretail.com,North America
+CUST-1003,Nordic Solutions AB,contact@nordicsolutions.se,Europe
+CUST-1004,Bavaria Logistics GmbH,supply@bavaria-log.de,Europe
+CUST-1005,Pacific Rim Technologies,buyer@pacificrimtech.jp,Asia-Pacific
+CUST-1006,Singapore Analytics Pte,admin@sg-analytics.sg,Asia-Pacific
+CUST-1007,Sao Paulo Trading S.A.,compras@sptrading.br,Latin America
+CUST-1008,Andes Mining & Tech,operations@andesmining.cl,Latin America
+CUST-1009,Apex Cloud Systems,finance@apexcloud.io,North America
+CUST-1010,London Fintech Ventures,it@londonfintech.co.uk,Europe

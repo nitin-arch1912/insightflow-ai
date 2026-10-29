@@ -1,17 +1,10 @@
 """
 Health check endpoint — /api/v1/health
 
-This is the first real endpoint in InsightFlow AI.
-
 Responsibilities:
   - Confirm the API process is alive.
   - Report the application version and environment.
-  - (Future) Report database and dependency health.
-
-We use a Pydantic response model so the shape is:
-  - Validated on the way out (we can never accidentally return a dict with
-    the wrong keys).
-  - Documented automatically in the OpenAPI schema (/docs).
+  - Check database connectivity (ping).
 """
 
 from fastapi import APIRouter
@@ -19,6 +12,7 @@ from pydantic import BaseModel
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.db.session import check_database_health
 
 logger = get_logger(__name__)
 
@@ -35,8 +29,18 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     environment: str
+    database: str
 
-    model_config = {"json_schema_extra": {"example": {"status": "ok", "version": "0.1.0", "environment": "development"}}}
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "status": "ok",
+                "version": "0.1.0",
+                "environment": "development",
+                "database": "connected",
+            }
+        }
+    }
 
 
 # ------------------------------------------------------------------ #
@@ -48,21 +52,21 @@ class HealthResponse(BaseModel):
     response_model=HealthResponse,
     summary="Health check",
     description=(
-        "Returns the current status of the API. "
-        "Use this endpoint for load-balancer and monitoring probes."
+        "Returns the current operational status of the API and its dependencies "
+        "(including database connectivity)."
     ),
 )
 async def health_check() -> HealthResponse:
     """
-    Return application health status.
-
-    This endpoint is intentionally simple — it only checks that the
-    Python process is running and configuration loaded correctly.
-    Phase 3 will extend this to include a database ping.
+    Return application and database health status.
     """
-    logger.info("Health check requested")
+    db_connected = await check_database_health()
+    status_str = "ok" if db_connected else "degraded"
+    db_status = "connected" if db_connected else "disconnected"
+
     return HealthResponse(
-        status="ok",
+        status=status_str,
         version=settings.app_version,
         environment=settings.app_env,
+        database=db_status,
     )

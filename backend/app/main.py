@@ -102,10 +102,13 @@ def create_app() -> FastAPI:
         Bare /health for load-balancer probes.
         Returns the same shape as /api/v1/health.
         """
+        from app.db.session import check_database_health
+        db_connected = await check_database_health()
         return {
-            "status": "ok",
+            "status": "ok" if db_connected else "degraded",
             "version": settings.app_version,
             "environment": settings.app_env,
+            "database": "connected" if db_connected else "disconnected",
         }
 
     logger.info(

@@ -1,0 +1,13 @@
+sku,name,category,unit_price,cost_price,is_active
+PROD-EL-001,UltraBook Pro 15,Electronics,1299.99,850.00,True
+PROD-EL-002,4K UHD 27-inch Monitor,Electronics,389.50,220.00,True
+PROD-EL-003,Wireless Noise-Canceling Headset,Electronics,179.99,85.00,True
+PROD-OF-001,Ergonomic Mechanical Keyboard,Office Supplies,119.00,55.00,True
+PROD-OF-002,Precision Laser Mouse,Office Supplies,59.90,25.00,True
+PROD-OF-003,Recycled Paper Carton (10 reams),Office Supplies,44.50,22.00,True
+PROD-FN-001,Executive Mesh Task Chair,Furniture,349.00,160.00,True
+PROD-FN-002,Motorized Standing Desk 60x30,Furniture,599.00,320.00,True
+PROD-FN-003,Acoustic Desk Privacy Panel,Furniture,129.00,50.00,True
+PROD-SW-001,InsightFlow Analytics License (Annual),Software,999.00,120.00,True
+PROD-SW-002,Security & Backup Suite (Annual),Software,499.00,80.00,True
+PROD-SW-003,Cloud Collaboration Hub (Annual),Software,299.00,40.00,True

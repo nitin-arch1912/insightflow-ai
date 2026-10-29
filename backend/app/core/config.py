@@ -2,7 +2,7 @@
 Application settings loaded from environment variables.
 
 We use pydantic-settings so every setting is:
-  - Typed  (Python type hints enforce the shape)
+  - Typed (Python type hints enforce the shape)
   - Validated at startup (the app crashes fast with a clear error if misconfigured)
   - Sourced from environment / .env file (never hard-coded secrets)
 
@@ -12,8 +12,14 @@ Usage anywhere in the app:
 """
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Base directory for backend (d:/ai_workspace/project/backend)
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+DEFAULT_DB_FILE = BACKEND_DIR / "insightflow.db"
+DEFAULT_SQLITE_URL = f"sqlite+aiosqlite:///{DEFAULT_DB_FILE.as_posix()}"
 
 
 class Settings(BaseSettings):
@@ -34,8 +40,10 @@ class Settings(BaseSettings):
 
     # ------------------------------------------------------------------ #
     # Database (Phase 3)                                                   #
+    # Defaults to local SQLite async with absolute path for zero-dep dev.  #
+    # In production/Docker, set DATABASE_URL=postgresql+asyncpg://...      #
     # ------------------------------------------------------------------ #
-    database_url: str | None = None
+    database_url: str = DEFAULT_SQLITE_URL
 
     # ------------------------------------------------------------------ #
     # AI Provider (Phase 7)                                                #

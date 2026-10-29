@@ -13,6 +13,11 @@ build/
 .eggs/
 *.egg
 
+# Database local files
+*.db
+*.sqlite
+*.sqlite3
+
 # Environment / secrets
 .env
 .env.local
@@ -43,5 +48,5 @@ Thumbs.db
 # Docker
 *.log
 
-# Alembic (future – keep migrations, ignore auto-generated pycache)
+# Alembic
 backend/migrations/__pycache__/
