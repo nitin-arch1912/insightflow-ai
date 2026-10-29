@@ -10,10 +10,10 @@
 
 | Field | Value |
 |---|---|
-| **Phase** | 3 — Database and Business Data |
-| **Milestone** | Phase 3 Complete (Async SQLAlchemy 2.0, Alembic, Domain Models, Seed Data) |
+| **Phase** | 4 — Business Analytics Core |
+| **Milestone** | Phase 4 Complete (Deterministic SQL Metrics, REST Analytics API, Full Ground Truth Verification) |
 | **Date** | 2026-10-29 |
-| **Status** | ✅ Complete — 27/27 tests passing |
+| **Status** | ✅ Complete — 33/33 tests passing |
 
 ---
 
@@ -42,16 +42,23 @@
 - [x] SQLAlchemy 2.0 async engine and session factory (`app/db/session.py`)
 - [x] Dual-dialect support: SQLite async (`aiosqlite`) for zero-dependency local dev; PostgreSQL (`asyncpg`) for production
 - [x] `docker-compose.yml` for local PostgreSQL 16 containerization
-- [x] Core domain ORM models:
-  - `Customer`: buyer profile, external ID, email, region
-  - `Product`: catalog items, category, unit price, cost of goods sold
-  - `Order`: financial transactions, status, order date, gross/discount/net amounts
-  - `OrderItem`: line items, foreign keys, quantity checks
+- [x] Core domain ORM models: `Customer`, `Product`, `Order`, `OrderItem`
 - [x] Alembic migration configuration and baseline revision (`0001_initial_schema.py`)
 - [x] Database health check probe integrated into `GET /api/v1/health` (`"database": "connected"`)
 - [x] Deterministic data seeder (`scripts/seed_data.py`) with 10 customers, 12 products, and 30 realistic orders
 - [x] Sample CSV data files stored in `data/samples/`
-- [x] 6 new database unit tests (27 total passing tests)
+
+### Phase 4 — Business Analytics Core
+- [x] Defined deterministic business metrics: Gross Revenue, Discounts, Net Revenue, AOV, Refund Rate, and Active Customers
+- [x] Analytics service layer (`app/services/analytics/service.py`) executing optimized SQL aggregation queries
+- [x] Typed Pydantic response schemas in `app/schemas/analytics.py`
+- [x] REST API endpoints:
+  - `GET /api/v1/analytics/overview` (KPI cards, date/region filters, division-by-zero protection)
+  - `GET /api/v1/analytics/by-category` (Category sales, units sold, percentage share)
+  - `GET /api/v1/analytics/by-region` (Regional net revenue and customer distribution)
+  - `GET /api/v1/analytics/trends` (Daily time-series revenue trends)
+- [x] 6 new integration tests verifying numerical correctness against exact ground truth (33 total passing tests)
+- [x] API documentation updated in `docs/api.md`
 
 ---
 
@@ -71,92 +78,85 @@ FastAPI App (app/main.py)
     ├─ /docs                ← OpenAPI UI
     └─ /api/v1/
         ├─ /health          ← versioned health check (includes DB status)
-        └─ /info            ← system metadata & uptime
-              │
-              ▼
-   SQLAlchemy 2.0 Async Session (app/db/session.py)
-              │
-              ▼
-   Domain Models (app/models/): Customer, Product, Order, OrderItem
-              │
-              ▼
-   Database: SQLite (local default) / PostgreSQL 16 (docker-compose)
+        ├─ /info            ← system metadata & uptime
+        └─ /analytics/      ← deterministic business analytics
+              ├─ /overview
+              ├─ /by-category
+              ├─ /by-region
+              └─ /trends
+                    │
+                    ▼
+          AnalyticsService (app/services/analytics/service.py)
+                    │
+                    ▼
+          SQLAlchemy 2.0 Async Session (app/db/session.py)
+                    │
+                    ▼
+          Database (SQLite / PostgreSQL)
 ```
-
----
-
-## Dependencies
-
-### Runtime (`requirements.txt`)
-| Package | Purpose |
-|---|---|
-| `fastapi` | Web framework |
-| `uvicorn[standard]` | ASGI server |
-| `pydantic` | Data validation and response models |
-| `pydantic-settings` | Environment-based configuration |
-| `python-dotenv` | Load `.env` file |
-| `sqlalchemy` | SQL toolkit and ORM (2.0 async) |
-| `alembic` | Database migrations |
-| `asyncpg` | Async PostgreSQL driver |
-| `aiosqlite` | Async SQLite driver (local dev fallback) |
-| `greenlet` | Required for SQLAlchemy async operations |
-
-### Dev (`requirements-dev.txt`)
-| Package | Purpose |
-|---|---|
-| `pytest` | Test runner |
-| `httpx` | Async HTTP client (TestClient dependency) |
-| `pytest-asyncio` | Async test fixtures |
 
 ---
 
 ## Verified Tests
 
-✅ **Verified 2026-10-29 — 27 passed, 0 failed, 1 warning (2.17s)**
+✅ **Verified 2026-10-29 — 33 passed, 0 failed, 1 warning (3.52s)**
 
 ```
-pytest d:\ai_workspace\project\backend\tests\ -v
+pytest tests/ -v
 ```
 
 ```
-backend\tests\test_database.py::test_database_health_check PASSED        [  3%]
-backend\tests\test_database.py::test_customers_seeded PASSED             [  7%]
-backend\tests\test_database.py::test_products_seeded PASSED              [ 11%]
-backend\tests\test_database.py::test_orders_and_relationships PASSED     [ 14%]
-backend\tests\test_database.py::test_order_item_quantity_check_constraint PASSED [ 18%]
-backend\tests\test_errors.py::test_404_error_format PASSED               [ 22%]
-backend\tests\test_errors.py::test_405_error_format PASSED               [ 25%]
-backend\tests\test_errors.py::test_422_validation_error_format PASSED    [ 29%]
-backend\tests\test_errors.py::test_500_unhandled_exception_format PASSED [ 33%]
-backend\tests\test_health.py::TestRootHealth::test_returns_200 PASSED    [ 37%]
-backend\tests\test_health.py::TestRootHealth::test_status_is_ok PASSED   [ 40%]
-backend\tests\test_health.py::TestRootHealth::test_version_is_present PASSED [ 44%]
-backend\tests\test_api_v1_health::test_returns_200 PASSED                [ 48%]
-backend\tests\test_api_v1_health::test_status_is_ok PASSED               [ 51%]
-backend\tests\test_api_v1_health::test_version_matches_config PASSED     [ 55%]
-backend\tests\test_api_v1_health::test_environment_is_present PASSED     [ 59%]
-backend\tests\test_api_v1_health::test_database_is_connected PASSED     [ 62%]
-backend\tests\test_api_v1_health::test_response_shape PASSED            [ 66%]
-backend\tests\test_root_redirect::test_redirects_to_docs PASSED          [ 70%]
-backend\tests\test_negative_cases::test_unknown_route_returns_404 PASSED [ 74%]
-backend\tests\test_negative_cases::test_wrong_method_returns_405 PASSED  [ 77%]
-backend\tests\test_info.py::test_get_system_info_returns_200 PASSED      [ 81%]
-backend\tests\test_info.py::test_system_info_payload_structure PASSED    [ 85%]
-backend\tests\test_info.py::test_system_info_includes_request_id_header PASSED [ 88%]
-backend\tests\test_middleware.py::test_response_has_request_id_header PASSED [ 92%]
-backend\tests\test_middleware.py::test_custom_request_id_is_preserved PASSED [ 96%]
-backend\tests\test_middleware.py::test_sequential_requests_have_unique_ids PASSED [100%]
+tests/test_analytics.py::test_overview_unfiltered_metrics PASSED         [  3%]
+tests/test_analytics.py::test_overview_filter_by_region PASSED           [  6%]
+tests/test_analytics.py::test_overview_empty_date_range_handles_division_by_zero PASSED [  9%]
+tests/test_analytics.py::test_category_breakdown PASSED                  [ 12%]
+tests/test_analytics.py::test_region_breakdown PASSED                    [ 15%]
+tests/test_analytics.py::test_trends_daily PASSED                        [ 18%]
+tests/test_database.py::test_database_health_check PASSED                [ 21%]
+tests/test_database.py::test_customers_seeded PASSED                     [ 24%]
+tests/test_database.py::test_products_seeded PASSED                      [ 27%]
+tests/test_database.py::test_orders_and_relationships PASSED             [ 30%]
+tests/test_database.py::test_order_item_quantity_check_constraint PASSED [ 33%]
+tests/test_errors.py::test_404_error_format PASSED                       [ 36%]
+tests/test_errors.py::test_405_error_format PASSED                       [ 39%]
+tests/test_errors.py::test_422_validation_error_format PASSED            [ 42%]
+tests/test_errors.py::test_500_unhandled_exception_format PASSED         [ 45%]
+tests/test_health.py::TestRootHealth::test_returns_200 PASSED            [ 48%]
+tests/test_health.py::TestRootHealth::test_status_is_ok PASSED           [ 51%]
+tests/test_health.py::TestRootHealth::test_version_is_present PASSED     [ 54%]
+tests/test_health.py::TestApiV1Health::test_returns_200 PASSED           [ 57%]
+tests/test_health.py::TestApiV1Health::test_status_is_ok PASSED          [ 60%]
+tests/test_health.py::TestApiV1Health::test_version_matches_config PASSED [ 63%]
+tests/test_health.py::TestApiV1Health::test_environment_is_present PASSED [ 66%]
+tests/test_health.py::TestApiV1Health::test_database_is_connected PASSED [ 69%]
+tests/test_health.py::TestApiV1Health::test_response_shape PASSED        [ 72%]
+tests/test_health.py::TestRootRedirect::test_redirects_to_docs PASSED    [ 75%]
+tests/test_health.py::TestNegativeCases::test_unknown_route_returns_404 PASSED [ 78%]
+tests/test_health.py::TestNegativeCases::test_wrong_method_returns_405 PASSED [ 81%]
+tests/test_info.py::test_get_system_info_returns_200 PASSED              [ 84%]
+tests/test_info.py::test_system_info_payload_structure PASSED            [ 87%]
+tests/test_info.py::test_system_info_includes_request_id_header PASSED   [ 90%]
+tests/test_middleware.py::test_response_has_request_id_header PASSED     [ 93%]
+tests/test_middleware.py::test_custom_request_id_is_preserved PASSED     [ 96%]
+tests/test_middleware.py::test_sequential_requests_have_unique_ids PASSED [100%]
 
-======================== 27 passed, 1 warning in 2.17s ========================
+======================== 33 passed, 1 warning in 3.52s ========================
 ```
 
 ---
 
 ## Next Milestone
 
-**Phase 4 — Business Analytics Core**
-- Define deterministic business metrics: Total Revenue, Net Revenue, Total Orders, Average Order Value (AOV), Refund Rate, Customer Acquisition/Count.
-- Implement tested SQL aggregation queries and analytics service layer (`app/services/analytics/`).
-- Create typed response schemas for KPI summary, revenue trends over time, category breakdowns, and regional performance.
-- Expose REST endpoints: `/api/v1/analytics/overview`, `/api/v1/analytics/trends`, `/api/v1/analytics/by-category`.
-- Write unit tests verifying financial correctness against known ground truth data.
+**Phase 5 — Frontend Dashboard**
+- Set up React + TypeScript + Vite project inside `frontend/`.
+- Configure Tailwind CSS for modern styling.
+- Install and configure a charting library (Recharts).
+- Build the core dashboard:
+  - Metric summary cards (Revenue, Orders, AOV, Refund Rate).
+  - Time-series revenue chart.
+  - Category breakdown bar chart.
+  - Regional distribution map/chart.
+  - Date and region filter controls.
+  - Loading skeletons and error boundary states.
+- Connect the frontend to our FastAPI analytics endpoints.
+- Confirm that InsightFlow AI functions as a 100% complete, useful business dashboard **without AI**.

@@ -19,6 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
+from app.api.v1 import analytics as analytics_router
 from app.api.v1 import health as health_router
 from app.api.v1 import info as info_router
 from app.core.config import settings
@@ -84,6 +85,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router.router, prefix=API_PREFIX)
     app.include_router(info_router.router, prefix=API_PREFIX)
+    app.include_router(analytics_router.router, prefix=API_PREFIX)
 
     # ---------------------------------------------------------------- #
     # Root redirect                                                      #

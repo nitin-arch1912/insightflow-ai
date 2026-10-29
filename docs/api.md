@@ -35,25 +35,6 @@ All error responses (4xx and 5xx) adhere to a predictable RFC 7807-inspired JSON
 - `details` (`any`): Optional granular context (e.g., field-level validation errors).
 - `request_id` (`string`): Corresponds with the `X-Request-ID` response header for log correlation.
 
-### Example: Validation Error (422)
-
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Request validation failed",
-    "details": [
-      {
-        "field": "body -> item_id",
-        "message": "Input should be a valid integer, unable to parse string as an integer",
-        "type": "int_parsing"
-      }
-    ],
-    "request_id": "b1e9c20a-6e54-46c5-89f5-19a98ef2e22c"
-  }
-}
-```
-
 ---
 
 ## Endpoints
@@ -67,7 +48,8 @@ All error responses (4xx and 5xx) adhere to a predictable RFC 7807-inspired JSON
     {
       "status": "ok",
       "version": "0.1.0",
-      "environment": "development"
+      "environment": "development",
+      "database": "connected"
     }
     ```
 
@@ -78,7 +60,8 @@ All error responses (4xx and 5xx) adhere to a predictable RFC 7807-inspired JSON
     {
       "status": "ok",
       "version": "0.1.0",
-      "environment": "development"
+      "environment": "development",
+      "database": "connected"
     }
     ```
 
@@ -97,5 +80,89 @@ All error responses (4xx and 5xx) adhere to a predictable RFC 7807-inspired JSON
       "status": "operational",
       "server_time": "2026-10-29T15:00:00.123456+00:00",
       "uptime_seconds": 3600.42
+    }
+    ```
+
+---
+
+### 3. Analytics Core
+
+All analytics calculations are deterministic and backed by validated SQL queries.
+
+- **GET `/api/v1/analytics/overview`**
+  - **Query Parameters**:
+    - `start_date` (`datetime`, optional)
+    - `end_date` (`datetime`, optional)
+    - `region` (`string`, optional)
+  - **Response 200**:
+    ```json
+    {
+      "gross_revenue": "47535.38",
+      "discount_amount": "915.00",
+      "net_revenue": "46620.38",
+      "total_orders": 30,
+      "completed_orders": 26,
+      "average_order_value": "1793.09",
+      "refund_rate_percentage": 3.33,
+      "active_customers": 10
+    }
+    ```
+
+- **GET `/api/v1/analytics/by-category`**
+  - **Query Parameters**:
+    - `start_date` (`datetime`, optional)
+    - `end_date` (`datetime`, optional)
+  - **Response 200**:
+    ```json
+    {
+      "items": [
+        {
+          "category": "Electronics",
+          "revenue": "25447.15",
+          "units_sold": 41,
+          "order_count": 14,
+          "percentage_of_total": 53.53
+        }
+      ],
+      "total_category_revenue": "47535.38"
+    }
+    ```
+
+- **GET `/api/v1/analytics/by-region`**
+  - **Query Parameters**:
+    - `start_date` (`datetime`, optional)
+    - `end_date` (`datetime`, optional)
+  - **Response 200**:
+    ```json
+    {
+      "items": [
+        {
+          "region": "North America",
+          "revenue": "18431.18",
+          "order_count": 8,
+          "customer_count": 3
+        }
+      ],
+      "total_regional_revenue": "46620.38"
+    }
+    ```
+
+- **GET `/api/v1/analytics/trends`**
+  - **Query Parameters**:
+    - `interval` (`"daily"` | `"weekly"`, default: `"daily"`)
+    - `start_date` (`datetime`, optional)
+    - `end_date` (`datetime`, optional)
+  - **Response 200**:
+    ```json
+    {
+      "interval": "daily",
+      "items": [
+        {
+          "date": "2026-10-01",
+          "gross_revenue": "2837.98",
+          "net_revenue": "2787.98",
+          "order_count": 1
+        }
+      ]
     }
     ```
