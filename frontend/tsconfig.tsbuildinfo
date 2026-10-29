@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/categorybarchart.tsx","./src/components/filterbar.tsx","./src/components/metriccard.tsx","./src/components/regionbreakdownlist.tsx","./src/components/revenuetrendchart.tsx","./src/services/api.ts"],"version":"5.6.3"}
