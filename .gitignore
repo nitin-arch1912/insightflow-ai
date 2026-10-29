@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# pytest
+.pytest_cache/
+.cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Node / Frontend (future)
+node_modules/
+frontend/dist/
+frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# Alembic (future – keep migrations, ignore auto-generated pycache)
+backend/migrations/__pycache__/
