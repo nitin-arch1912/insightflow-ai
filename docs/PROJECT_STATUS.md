@@ -10,15 +10,16 @@
 
 | Field | Value |
 |---|---|
-| **Phase** | 1 — Project Foundation |
-| **Milestone** | 1 — Repository, environment, and health endpoint |
+| **Phase** | 2 — Backend Foundations |
+| **Milestone** | Phase 2 Complete (Request ID, RFC 7807 Error Handling, System Info) |
 | **Date** | 2026-10-29 |
-| **Status** | 🟡 In progress — awaiting test verification |
+| **Status** | ✅ Complete — 21/21 tests passing |
 
 ---
 
 ## Completed Features
 
+### Phase 1 — Project Foundation
 - [x] Git repository initialized (`main` branch)
 - [x] Python virtual environment (`backend/.venv`)
 - [x] FastAPI application skeleton (`backend/app/main.py`)
@@ -26,9 +27,17 @@
 - [x] Structured logging (`backend/app/core/logging.py`)
 - [x] Health endpoint at `/health` and `/api/v1/health`
 - [x] Root redirect to `/docs`
-- [x] 8 pytest tests covering health endpoint (happy path + failure cases)
 - [x] `.gitignore`, `.env.example`, README scaffold
 - [x] Architecture decision record: ADR-001 (modular monolith)
+
+### Phase 2 — Backend Foundations
+- [x] `RequestIDMiddleware` for distributed request tracing via `X-Request-ID` header and context logging
+- [x] RFC 7807 standardized JSON error handler (`code`, `message`, `details`, `request_id`)
+- [x] Custom handlers for `StarletteHTTPException` (404, 405), `RequestValidationError` (422), and uncaught `Exception` (500)
+- [x] Leak-safe 500 error responses (no internal stack traces exposed)
+- [x] System metadata and uptime endpoint at `GET /api/v1/info`
+- [x] Comprehensive test coverage across middleware, errors, and system info
+- [x] API contract documented in `docs/api.md`
 
 ---
 
@@ -40,16 +49,16 @@ HTTP Request
     ▼
 FastAPI App (app/main.py)
     │
+    ├── RequestIDMiddleware (app/core/middleware.py)  [attaches X-Request-ID & logs request]
+    ├── CORSMiddleware
+    ├── Global Exception Handlers (app/core/exceptions.py) [uniform RFC 7807 JSON errors]
+    │
     ├─ /health              ← bare health check
     ├─ /docs                ← OpenAPI UI (auto-generated)
     └─ /api/v1/
-        └─ /health          ← versioned health check (app/api/v1/health.py)
-                                    │
-                                    └─ app/core/config.py   (Settings)
-                                    └─ app/core/logging.py  (Logger)
+        ├─ /health          ← versioned health check (app/api/v1/health.py)
+        └─ /info            ← system metadata & uptime (app/api/v1/info.py)
 ```
-
-No database. No AI. No frontend. That comes next.
 
 ---
 
@@ -69,79 +78,59 @@ No database. No AI. No frontend. That comes next.
 |---|---|
 | `pytest` | Test runner |
 | `httpx` | Async HTTP client (TestClient dependency) |
+| `pytest-asyncio` | Async test fixtures |
 
 ---
 
 ## Verified Tests
 
-> ⚠️ Not yet verified — run the commands below and update this section.
+✅ **Verified 2026-10-29 — 21 passed, 0 failed, 1 warning (1.58s)**
 
 ```
-pytest tests/ -v
+pytest d:\ai_workspace\project\backend\tests\ -v
 ```
 
-Expected output (8 tests):
 ```
-tests/test_health.py::TestRootHealth::test_returns_200          PASSED
-tests/test_health.py::TestRootHealth::test_status_is_ok         PASSED
-tests/test_health.py::TestRootHealth::test_version_is_present   PASSED
-tests/test_health.py::TestApiV1Health::test_returns_200         PASSED
-tests/test_health.py::TestApiV1Health::test_status_is_ok        PASSED
-tests/test_health.py::TestApiV1Health::test_version_matches_config PASSED
-tests/test_health.py::TestApiV1Health::test_environment_is_present PASSED
-tests/test_health.py::TestApiV1Health::test_response_shape      PASSED
-tests/test_health.py::TestRootRedirect::test_redirects_to_docs  PASSED
-tests/test_health.py::TestNegativeCases::test_unknown_route_returns_404 PASSED
-tests/test_health.py::TestNegativeCases::test_wrong_method_returns_405  PASSED
+backend\tests\test_errors.py::test_404_error_format PASSED               [  4%]
+backend\tests\test_errors.py::test_405_error_format PASSED               [  9%]
+backend\tests\test_errors.py::test_422_validation_error_format PASSED    [ 14%]
+backend\tests\test_errors.py::test_500_unhandled_exception_format PASSED [ 19%]
+backend\tests\test_health.py::TestRootHealth::test_returns_200 PASSED    [ 23%]
+backend\tests\test_health.py::TestRootHealth::test_status_is_ok PASSED   [ 28%]
+backend\tests\test_health.py::TestRootHealth::test_version_is_present PASSED [ 33%]
+backend\tests\test_health.py::TestApiV1Health::test_returns_200 PASSED   [ 38%]
+backend\tests\test_health.py::TestApiV1Health::test_status_is_ok PASSED  [ 42%]
+backend\tests\test_health.py::TestApiV1Health::test_version_matches_config PASSED [ 47%]
+backend\tests\test_health.py::TestApiV1Health::test_environment_is_present PASSED [ 52%]
+backend\tests\test_health.py::TestApiV1Health::test_response_shape PASSED [ 57%]
+backend\tests\test_health.py::TestRootRedirect::test_redirects_to_docs PASSED [ 61%]
+backend\tests\test_health.py::TestNegativeCases::test_unknown_route_returns_404 PASSED [ 66%]
+backend\tests\test_health.py::TestNegativeCases::test_wrong_method_returns_405 PASSED [ 71%]
+backend\tests\test_info.py::test_get_system_info_returns_200 PASSED      [ 76%]
+backend\tests\test_info.py::test_system_info_payload_structure PASSED    [ 80%]
+backend\tests\test_info.py::test_system_info_includes_request_id_header PASSED [ 85%]
+backend\tests\test_middleware.py::test_response_has_request_id_header PASSED [ 90%]
+backend\tests\test_middleware.py::test_custom_request_id_is_preserved PASSED [ 95%]
+backend\tests\test_middleware.py::test_sequential_requests_have_unique_ids PASSED [100%]
+
+======================== 21 passed, 1 warning in 1.58s ========================
 ```
 
 ---
 
-## Known Issues
+## Known Issues & Notes
 
-- Docker Desktop not installed — needed for Phase 3 (PostgreSQL).
-- No database — the backend stores and retrieves nothing yet.
-- No authentication — the health endpoint is publicly accessible.
-- CORS is wide-open in development mode — tighten before production.
-
----
-
-## Pending Decisions
-
-| Decision | Options | Status |
-|---|---|---|
-| Frontend charting library | Recharts vs Nivo vs Victory | Deferred to Phase 5 |
-| AI provider | OpenAI API vs Ollama (local) | Deferred to Phase 7 |
-| Cloud platform | Render vs Railway vs GCP | Deferred to Phase 12 |
-
----
-
-## Important Commands
-
-```powershell
-# Activate virtual environment (run from backend/)
-.venv\Scripts\Activate.ps1
-
-# Start development server
-uvicorn app.main:app --reload --port 8000
-
-# Run tests
-pytest tests/ -v
-
-# Check a running endpoint
-Invoke-RestMethod -Uri http://localhost:8000/health
-
-# Deactivate virtual environment
-deactivate
-```
+- Docker Desktop is not yet installed (required for Phase 3 PostgreSQL).
+- Database layer has not yet been introduced.
+- Deprecation warning in starlette testclient with httpx (non-blocking).
 
 ---
 
 ## Next Milestone
 
-**Phase 2 — Backend Foundations**
-- Consistent error response format (RFC 7807 Problem Details)
-- Request ID middleware for tracing
-- 404 and 422 custom handlers
-- OpenAPI documentation clean-up
-- `GET /api/v1/info` endpoint with build metadata
+**Phase 3 — Database and Business Data**
+- Configure PostgreSQL connection (async SQLAlchemy 2.0).
+- Initialize Alembic migration environment.
+- Define core domain models: `Customer`, `Product`, `Order`, `OrderItem`.
+- Seed sample transaction data.
+- Add database health check probe to `/api/v1/health`.

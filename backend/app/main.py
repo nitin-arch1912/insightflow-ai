@@ -3,9 +3,10 @@ InsightFlow AI — FastAPI application entry point.
 
 This module:
   1. Creates the FastAPI app instance.
-  2. Registers all API routers.
-  3. Configures global middleware (CORS, etc.) as needed.
-  4. Exposes a root redirect and a top-level health shortcut.
+  2. Registers global middlewares (CORS, RequestID).
+  3. Configures global exception handlers (RFC 7807 problem details).
+  4. Registers all API routers.
+  5. Exposes a root redirect and a top-level health shortcut.
 
 Run locally:
     uvicorn app.main:app --reload --port 8000
@@ -19,14 +20,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.api.v1 import health as health_router
+from app.api.v1 import info as info_router
 from app.core.config import settings
+from app.core.exceptions import register_exception_handlers
 from app.core.logging import get_logger
+from app.core.middleware import RequestIDMiddleware
 
 logger = get_logger(__name__)
 
 # ------------------------------------------------------------------ #
 # App factory                                                          #
 # ------------------------------------------------------------------ #
+
 
 def create_app() -> FastAPI:
     """
@@ -49,10 +54,12 @@ def create_app() -> FastAPI:
     )
 
     # ---------------------------------------------------------------- #
-    # CORS                                                               #
-    # Broad during development; tighten before production.              #
+    # Middlewares                                                        #
+    # Middlewares execute in reverse order of addition:                #
+    # 1. RequestIDMiddleware attaches request_id to state & headers     #
+    # 2. CORSMiddleware handles CORS preflights and headers            #
     # ---------------------------------------------------------------- #
-    origins = ["http://localhost:5173", "http://localhost:3000"]  # Vite + CRA
+    origins = ["http://localhost:5173", "http://localhost:3000"]
     if settings.app_env != "production":
         origins.append("*")
 
@@ -63,6 +70,12 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(RequestIDMiddleware)
+
+    # ---------------------------------------------------------------- #
+    # Exception Handlers (RFC 7807 uniform errors)                     #
+    # ---------------------------------------------------------------- #
+    register_exception_handlers(app)
 
     # ---------------------------------------------------------------- #
     # Routers                                                            #
@@ -70,6 +83,7 @@ def create_app() -> FastAPI:
     API_PREFIX = "/api/v1"
 
     app.include_router(health_router.router, prefix=API_PREFIX)
+    app.include_router(info_router.router, prefix=API_PREFIX)
 
     # ---------------------------------------------------------------- #
     # Root redirect                                                      #
@@ -95,7 +109,7 @@ def create_app() -> FastAPI:
         }
 
     logger.info(
-        "InsightFlow AI started",
+        "InsightFlow AI initialized",
         extra={"version": settings.app_version, "env": settings.app_env},
     )
 
